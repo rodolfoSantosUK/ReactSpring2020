@@ -2,6 +2,7 @@ package br.com.projectApp.web;
 
 
 import br.com.projectApp.domain.Project;
+import br.com.projectApp.services.MapValidationErrorService;
 import br.com.projectApp.services.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,20 +25,16 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
+    @Autowired
+    private MapValidationErrorService mapValidationErrorService;
+
     @PostMapping("")
     public ResponseEntity<?> createNewProject(@RequestBody @Valid Project project, BindingResult bindingResult) {
-       System.out.println("Chamou createNewProject");
-        System.out.println(bindingResult.hasErrors());
-        if(bindingResult.hasErrors()) {
 
-            Map<String, String> errorMap = new HashMap<>();
-
-            for(FieldError error : bindingResult.getFieldErrors() ) {
-                errorMap.put(error.getField(), error.getDefaultMessage());
-            }
-
-           return new ResponseEntity<Map<String, String>>(errorMap, HttpStatus.BAD_REQUEST )  ;
-       }
+        ResponseEntity<?> errorMap = mapValidationErrorService.MapValidationService(bindingResult)  ;
+        if(errorMap != null) {
+            return errorMap;
+        }
 
         Project project1 = projectService.saveOrUpdateProject(project);
         return new ResponseEntity<Project>(project1, HttpStatus.CREATED);
